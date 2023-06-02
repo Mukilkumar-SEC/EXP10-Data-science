@@ -1,119 +1,130 @@
-# EXP-10-Datascience-process
+## Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment
+## AIM:
+To Perform Data Science Process on a complex dataset and save the data to a file.
 
-# AIM :
+## ALGORITHM
+## STEP 1 :
+Read the given Data
 
- To Perform Data Science Process on a complex dataset and save the data to a file.
- 
-# ALGORITHM :
+## STEP 2 :
+Clean the Data Set using Data Cleaning Process
 
-## STEP 1:
+## STEP 3 :
+Apply Feature Generation/Feature Selection Techniques on the data set
 
-  Read the given Data
-  
-## STEP 2:
+## STEP 4 :
+Apply EDA /Data visualization techniques to all the features of the data set
 
-  Clean the Data Set using Data Cleaning Process 
-  
-## STEP 3:
-
-  Apply Feature Generation/Feature Selection Techniques on the data set 
-  
-## STEP 4: 
-
-  Apply EDA /Data visualization techniques to all the features of the data set
-
-# Program:
-
-Developed by : k.kavya
-
-Register number : 212222230065
+### CODE:
 ```
-import numpy as np 
-import pandas as pd 
+Developed by: Mukil kumar v
+Register No: 212222230087
+```
+```
+import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-df_automobile = pd.read_csv("Automobile_data.csv")
+data=pd.read_csv("/content/StudentsPerformance - StudentsPerformance.csv.csv")
+print(data)
 
-#Data Cleaning
-df_data = df_automobile.replace('?',np.NAN) 
-df_data.isnull().sum()
+data.info()
 
-#Missing Data
-df_temp = df_automobile[df_automobile['normalized-losses']!='?']
-normalised_mean = df_temp['normalized-losses'].astype(int).mean()
-df_automobile['normalized-losses'] = df_automobile['normalized-losses'].replace('?',normalised_mean).astype(int)
+data.isnull().sum()
+```
+### data cleaning
+```
+data['test preparation course']=data['test preparation course'].fillna(data['test preparation course'].mode()[0])
+data['math score']=data['math score'].fillna(data['math score']).fillna(data['math score'].mean())
+data['writing score']=data['writing score'].fillna(data['writing score']).fillna(data['reading score'].median())
 
-df_temp = df_automobile[df_automobile['price']!='?']
-normalised_mean = df_temp['price'].astype(int).mean()
-df_automobile['price'] = df_automobile['price'].replace('?',normalised_mean).astype(int)
+data.isnull().sum()
 
-df_temp = df_automobile[df_automobile['horsepower']!='?']
-normalised_mean = df_temp['horsepower'].astype(int).mean()
-df_automobile['horsepower'] = df_automobile['horsepower'].replace('?',normalised_mean).astype(int)
-d
-df_temp = df_automobile[df_automobile['peak-rpm']!='?']
-normalised_mean = df_temp['peak-rpm'].astype(int).mean()
-df_automobile['peak-rpm'] = df_automobile['peak-rpm'].replace('?',normalised_mean).astype(int)
+data.describe()
 
-df_temp = df_automobile[df_automobile['bore']!='?']
-normalised_mean = df_temp['bore'].astype(float).mean()
-df_automobile['bore'] = df_automobile['bore'].replace('?',normalised_mean).astype(float)
-
-df_temp = df_automobile[df_automobile['stroke']!='?']
-normalised_mean = df_temp['stroke'].astype(float).mean()
-df_automobile['stroke'] = df_automobile['stroke'].replace('?',normalised_mean).astype(float)
+data.head()
+```
+### removing outliers
+```
+Q1=data['math score'].quantile(0.25)
+Q3=data['math score'].quantile(0.75)
+IQR=Q3-Q1
+lower=Q1-1.5*IQR
+upper=Q3+1.5*IQR
+df=data[(data['math score']>=lower) & (data['math score']<=upper)] 
+print(df)   #new dataframe.
 
 
-df_automobile['num-of-doors'] = df_automobile['num-of-doors'].replace('?','four')
-df_automobile.head()
+outliers=data[(data['math score']<lower) | (data['math score']>upper)] 
+print(outliers)
+
+df.shape
+```
+### Feature generation
+```
+from sklearn.preprocessing import OrdinalEncoder,LabelEncoder
+df1=df.copy()
+r=['group A','group B','group C','group D','group E']
+enc=OrdinalEncoder(categories=[r])
+enc.fit_transform(df1[['race/ethnicity']])
+df1['neword1']=enc.fit_transform(df1[['race/ethnicity']])
+df1 
 
 
-#Summary statistics of variable
-df_automobile.describe()
+df2=df1.copy()
+le=LabelEncoder()
+df2['neword2']=le.fit_transform(df2['race/ethnicity'])
+df2
 
-#Univariate Analysis
-df_automobile[['engine-size','peak-rpm','curb-weight','horsepower','price']].hist(figsize=(10,8),bins=6,color='black')
+from sklearn.preprocessing import OneHotEncoder
+df3=df.copy()
+ohe=OneHotEncoder(sparse=False)
+enc=pd.DataFrame(ohe.fit_transform(df3[['lunch']]))
+df3=pd.concat([df3,enc],axis=1)
+df3.head()
 
-plt.tight_layout()
+!pip install --upgrade category_encoders
+from category_encoders import BinaryEncoder
+be=BinaryEncoder()
+df4=df.copy()
+newdata=be.fit_transform(df4['test preparation course'])
+df4=pd.concat([df,newdata],axis=1)
+df4.head()
+```
+### heatmap
+```
+data.corr()
+plt.subplots(figsize=(7,5))
+sns.heatmap(data.corr(),annot=True)
+```
+### Data visualization
+### Scatter plot of math score vs. reading score
+```
+plt.scatter(data['math score'], data['reading score'])
+plt.xlabel('Math Score')
+plt.ylabel('Reading Score')
+plt.title('Math Score vs. Reading Score')
 plt.show()
 
-import seaborn as sns
-corr = df_automobile.corr()
-plt.figure(figsize=(20,9))
-a = sns.heatmap(corr, annot=True, fmt='.2f')
-#Bivariate Analysis
-plt.rcParams['figure.figsize']=(23,10)
-ax = sns.boxplot(x="make", y="price", data=df_automobile)
+sns.barplot(x='gender',y='reading score',data=df)
 
-plt.rcParams['figure.figsize']=(19,7)
-ax = sns.boxplot(x="body-style", y="price", data=df_automobile)
-
-#violin
-sns.catplot(data=df_automobile, x="num-of-cylinders", y="horsepower",kind="violin")
-
-
-#normalized losess
-sns.catplot(data=df_automobile, y="normalized-losses", x="symboling" , hue="body-style" ,kind="point")
+sns.boxplot(x="math score",data=df)
 ```
-# Output:
-## DATA CLEANING
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/b4d7bd50-e0c7-4f02-b799-995272416696)
-## Missing Data
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/e7b786a1-800e-4276-8947-2670331b1e97)
-
-## Summary statistics of variable
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/08bbec0f-960b-49e3-8640-204c03af1e15)
-## Univariate Analysis
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/caf22b08-3eb1-408b-8aa0-9416e46cf059)
-
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/3ed30a42-690d-45c3-9055-32e0b09f8661)
-## Bivariate Analysis
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/419b9f18-7285-4d68-afae-9322ab36cefd)
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/2c4c36e6-2f9f-417c-891a-7518d35f972b)
-## violin plot
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/29a414e6-ad08-499c-811b-abc86d306185)
-## Normalized-losses
-![image](https://github.com/kavyasenthamarai/EXP-10--datascience/assets/118668727/3a68382f-8f2a-4752-b251-05848e04f344)
-
-# RESULT
-Thus, we have read the given data and Performed Data Science Process on a complex dataset 
+## OUTPUT:
+![1](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/1e07c929-4fc4-4536-bd57-31d10e9cf3d4)
+![2](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/7bbf632a-36af-46c4-b353-caa5a0e0651c)
+![3](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/ae4cc29f-8e4f-4edc-ba00-6bcea86f504c)
+![4](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/5de88adc-f208-4553-9e05-d688d6464baf)
+![5](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/eea0d934-a3b5-435b-9561-149b728ecbc7)
+![6](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/4317f021-b169-49d5-90bc-62acc32cad5a)
+![7](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/9954ccf3-5143-411e-8029-60552ddf2e75)
+![8](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/bcb8b928-9758-44fd-a8e6-76497a0cfa44)
+![9](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/bc8cf80f-62a4-4d10-9427-3e54ac1c1983)
+![10](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/18f9eef0-c1b1-4972-9b21-04ce274b6448)
+![11](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/7ddbf2c1-b6a5-4772-a917-735768751661)
+![12](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/8c9df4f0-d588-4eb8-a55b-6445cd45fd15)
+![13](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/043edf89-eac4-40e8-91de-f7942e09ca3d)
+![14](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/0f87261a-07d3-4fd8-af31-c98ff0b832b5)
+![15](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/f9c4b65d-f4cc-45f9-972d-b925014f6707)
+![16](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/0604f106-71c2-4355-8751-e17b2f7eaafa)
+## RESULT:
+Hence, Data Science Process is performed on a complex dataset and saved the data to a file.
