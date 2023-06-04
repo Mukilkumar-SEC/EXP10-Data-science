@@ -1,130 +1,130 @@
-## Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment
-## AIM:
+# Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment
+# AIM:
 To Perform Data Science Process on a complex dataset and save the data to a file.
 
-## ALGORITHM
-## STEP 1 :
+# Explanation
+An Outlier is an observation in a given dataset that lies far from the rest of the observations. That means an outlier is vastly larger or smaller than the remaining values in the set. An outlier is an observation of a data point that lies an abnormal distance from other values in a given population. (odd man out).Outliers badly affect mean and standard deviation of the dataset. These may statistically give erroneous results.Most machine learning algorithms do not work well in the presence of outlier. So it is desirable to detect and remove outliers.Outliers are highly useful in anomaly detection like fraud detection where the fraud transactions are very different from normal transactions.
+
+# ALGORITHM
+
+### STEP 1 :
 Read the given Data
 
-## STEP 2 :
-Clean the Data Set using Data Cleaning Process
+### STEP 2 :
+Get the information about the data
 
-## STEP 3 :
-Apply Feature Generation/Feature Selection Techniques on the data set
+### STEP 3 :
+Detect the Outliers using IQR method and Z score
 
 ## STEP 4 :
-Apply EDA /Data visualization techniques to all the features of the data set
+Apply Feature Generation/Feature Selection Techniques on the data set
 
-### CODE:
+## STEP 5 :
+Apply EDA /Data visualization techniques to all the features of the data set
+# CODE
 ```
-Developed by: Mukil kumar v
-Register No: 212222230087
+NAME :MUKIL KUMAR V
+REG NO:212222230087
 ```
-```
-import pandas as pd
+``` PYTHON
+import pandas as ps
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-data=pd.read_csv("/content/StudentsPerformance - StudentsPerformance.csv.csv")
-print(data)
+df=ps.read_csv("/content/house.csv")
+df
 
-data.info()
+df.head()
 
-data.isnull().sum()
-```
-### data cleaning
-```
-data['test preparation course']=data['test preparation course'].fillna(data['test preparation course'].mode()[0])
-data['math score']=data['math score'].fillna(data['math score']).fillna(data['math score'].mean())
-data['writing score']=data['writing score'].fillna(data['writing score']).fillna(data['reading score'].median())
+df.tail(5)
 
-data.isnull().sum()
+df.info()
 
-data.describe()
+df.isnull().sum()
 
-data.head()
-```
-### removing outliers
-```
-Q1=data['math score'].quantile(0.25)
-Q3=data['math score'].quantile(0.75)
-IQR=Q3-Q1
-lower=Q1-1.5*IQR
-upper=Q3+1.5*IQR
-df=data[(data['math score']>=lower) & (data['math score']<=upper)] 
-print(df)   #new dataframe.
+q1=df['price_per_sqft'].quantile(0.35)
+q3=df['price_per_sqft'].quantile(0.65)
+print("First Quantile =",q1,"Second quantile =",q3)
 
-
-outliers=data[(data['math score']<lower) | (data['math score']>upper)] 
-print(outliers)
-
-df.shape
-```
-### Feature generation
-```
-from sklearn.preprocessing import OrdinalEncoder,LabelEncoder
-df1=df.copy()
-r=['group A','group B','group C','group D','group E']
-enc=OrdinalEncoder(categories=[r])
-enc.fit_transform(df1[['race/ethnicity']])
-df1['neword1']=enc.fit_transform(df1[['race/ethnicity']])
-df1 
-
-
-df2=df1.copy()
-le=LabelEncoder()
-df2['neword2']=le.fit_transform(df2['race/ethnicity'])
+from scipy import stats
+z=np.abs(stats.zscore(df['price_per_sqft']))
+df2=df[(z<3)]
 df2
 
-from sklearn.preprocessing import OneHotEncoder
-df3=df.copy()
-ohe=OneHotEncoder(sparse=False)
-enc=pd.DataFrame(ohe.fit_transform(df3[['lunch']]))
-df3=pd.concat([df3,enc],axis=1)
-df3.head()
-
-!pip install --upgrade category_encoders
-from category_encoders import BinaryEncoder
-be=BinaryEncoder()
-df4=df.copy()
-newdata=be.fit_transform(df4['test preparation course'])
-df4=pd.concat([df,newdata],axis=1)
-df4.head()
-```
-### heatmap
-```
-data.corr()
-plt.subplots(figsize=(7,5))
-sns.heatmap(data.corr(),annot=True)
-```
-### Data visualization
-### Scatter plot of math score vs. reading score
-```
-plt.scatter(data['math score'], data['reading score'])
-plt.xlabel('Math Score')
-plt.ylabel('Reading Score')
-plt.title('Math Score vs. Reading Score')
+plt.figure(figsize=(12,10))
+cols = ['bhk','bath','size']
+Q1 = df[cols].quantile(0.25)
+Q3 = df[cols].quantile(0.75)
+IQR = Q3 - Q1
+df = df[~((df[cols] < (Q1 - 1.5 * IQR)) |(df[cols] > (Q3 + 1.5 * IQR))).any(axis=1)]
+plt.title("Dataset after removing outliers")
+df.boxplot()
 plt.show()
 
-sns.barplot(x='gender',y='reading score',data=df)
+sns.boxplot(x="price_per_sqft",data=df)
+plt.figure(figsize=(9,6))
 
-sns.boxplot(x="math score",data=df)
+sns.lineplot(x="price",y="bhk",data=df,marker='o')
+plt.xticks(rotation = 90)
+
+sns.lineplot(x='price',y='total_sqft', hue ="price",data=df)
+
+sns.scatterplot(x='total_sqft',y='price_per_sqft',data=df)
+
+sns.boxplot(x="price",y="total_sqft",data=df)
+
+sns.barplot(x="bath",y="bhk",data=df)
+plt.xticks(rotation = 90)
+
+df3=df.groupby(by=["bath"]).sum()
+labels=[]
+for i in df3.index:
+    labels.append(i) 
+plt.figure(figsize=(8,8))
+colors = sns.color_palette('pastel')
+plt.pie(df3["total_sqft"],colors = colors,labels=labels, autopct = '%0.0f%%')
+plt.show()
+
+sns.pointplot(x=df["price_per_sqft"],y=df["bath"])
+df.corr()
+plt.subplots(figsize=(12,7))
+sns.heatmap(df.corr(),annot=True)
+
 ```
-## OUTPUT:
-![1](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/1e07c929-4fc4-4536-bd57-31d10e9cf3d4)
-![2](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/7bbf632a-36af-46c4-b353-caa5a0e0651c)
-![3](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/ae4cc29f-8e4f-4edc-ba00-6bcea86f504c)
-![4](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/5de88adc-f208-4553-9e05-d688d6464baf)
-![5](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/eea0d934-a3b5-435b-9561-149b728ecbc7)
-![6](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/4317f021-b169-49d5-90bc-62acc32cad5a)
-![7](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/9954ccf3-5143-411e-8029-60552ddf2e75)
-![8](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/bcb8b928-9758-44fd-a8e6-76497a0cfa44)
-![9](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/bc8cf80f-62a4-4d10-9427-3e54ac1c1983)
-![10](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/18f9eef0-c1b1-4972-9b21-04ce274b6448)
-![11](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/7ddbf2c1-b6a5-4772-a917-735768751661)
-![12](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/8c9df4f0-d588-4eb8-a55b-6445cd45fd15)
-![13](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/043edf89-eac4-40e8-91de-f7942e09ca3d)
-![14](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/0f87261a-07d3-4fd8-af31-c98ff0b832b5)
-![15](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/f9c4b65d-f4cc-45f9-972d-b925014f6707)
-![16](https://github.com/Brindha77/Ex-10-Data-Science-Process-on-Complex-Dataset-Assignment/assets/118889143/0604f106-71c2-4355-8751-e17b2f7eaafa)
-## RESULT:
-Hence, Data Science Process is performed on a complex dataset and saved the data to a file.
+
+# OUTPUT
+### READ
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/040974a3-678f-412f-8c67-13da2939bd8f)
+### HEAD
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/3ea36ab2-8c03-4b3c-b018-ac7664411417)
+### TAIL
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/200e9d5d-fa99-4f23-aa65-5431da363305)
+### INFO
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/28dbadef-ffb3-4358-a1d6-3f9a75823191)
+### ISNULL SUM
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/c72b762b-7638-4df0-ab27-86bdd31f11c4)
+### QUANTILE
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/1936022f-6898-4529-9df0-761a5746ca18)
+### DATASET AFTER REMOVAL OF OUTLIER USING Z-SCORE
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/60cbcc85-37f9-4493-9751-e50234c2f1b7)
+### BOX 
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/69e6411c-ecac-4883-927c-22e9ba3e6c74)
+### LINE PLOT 1
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/f58ebafe-0e41-47a4-8214-9e281fb63667)
+### LINE PLOT 2
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/bae6cdca-5762-4ee9-8489-dcc7e2b41242)
+### SCATTER
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/89bb8c01-3799-457f-990b-2ff41ff1f074)
+### BOX
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/c0d12656-9870-48e0-bc9c-ff4a48b078f9)
+### BAR
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/8313143e-da08-47f6-9f2a-334ae723c902)
+### PIE CHAT
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/80e2adfa-fca8-466f-9320-64d0e635f52c)
+### POINT PLOT
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/61f3cff4-8553-4cf2-9ff7-0b0fde07c03a)
+### HEAT MAP
+![image](https://github.com/MukeshVelmurugan/EXP-10-DATA-SCIENCE/assets/118707363/be7b1dbb-cde8-4df6-803c-aa5d80053705)
+
+# RESULT
+The given datasets are read and outliers are detected and are removed using IQR and z-score methods.
